@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/_9d5a70c_43d1_42f7_9224_cd8f4026c14e"
+        android:orientation="vertical"
+        android:padding="16dp"
+        tools:context=".DashboardActivity">
+
+        <TextView
+            android:id="@+id/welcomeTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="32dp"
+            android:drawableTint="#FFFFFF"
+            android:text="Welcome"
+            android:textColor="#FFFFFF"
+            android:textColorLink="#FFFEFE"
+            android:textSize="20sp" />
+
+        <Button
+            android:id="@+id/viewHealthDataButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="View Health Data" />
+
+        <Button
+            android:id="@+id/logoutButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@android:color/holo_red_light"
+            android:text="Logout" />
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
