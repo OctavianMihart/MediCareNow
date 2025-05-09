@@ -33,6 +33,7 @@
         <activity android:name=".RegisterActivity" />
         <activity android:name=".DashboardActivity" />
         <activity android:name=".HealthDataActivity" />
+        <activity android:name=".ECGMonitoringActivity" />
     </application>
 
 </manifest>

@@ -12,6 +12,10 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         tools:context=".HealthDataActivity">
 
         <TextView
@@ -39,10 +43,25 @@
 
         <TextView
             android:id="@+id/humidityTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="378dp"
+            android:layout_height="48dp"
             android:layout_marginTop="16dp"
             android:text="Humidity: --%"
             android:textSize="24sp" />
+
+        <Button
+            android:id="@+id/ecgButton"
+            android:layout_width="374dp"
+            android:layout_height="64dp"
+            android:layout_marginTop="16dp"
+            android:text="Open ECG Monitor" />
+
+        <Button
+            android:id="@+id/saveDataButton"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginTop="32dp"
+            android:text="Save Data to Firebase" />
+
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

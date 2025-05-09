@@ -49,6 +49,7 @@ dependencies {
     // Bluetooth
     implementation  ("androidx.core:core-ktx:1.10.1")
     implementation ("com.google.code.gson:gson:2.9.0")
+    implementation ("androidx.cardview:cardview:1.0.0")
 
 
 

@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,6 +34,8 @@ public class HealthDataActivity extends AppCompatActivity implements BluetoothSe
     private TextView pulseTextView, tempTextView, humidityTextView, statusTextView;
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
+    private Button saveDataButton;
+    private HealthData currentHealthData;
 
     // Threshold values for alerts
     private static final int MAX_PULSE = 100;
@@ -44,6 +48,8 @@ public class HealthDataActivity extends AppCompatActivity implements BluetoothSe
     // Bluetooth service
     private BluetoothService bluetoothService;
     private boolean isBound = false;
+    // ecg
+    private Button ecgButton;
 
     // Hardcoded Bluetooth device address
     private static final String ARDUINO_BLUETOOTH_ADDRESS = "00:11:22:33:44:55"; // Replace with your Arduino's address
@@ -79,6 +85,24 @@ public class HealthDataActivity extends AppCompatActivity implements BluetoothSe
         tempTextView = findViewById(R.id.tempTextView);
         humidityTextView = findViewById(R.id.humidityTextView);
         statusTextView = findViewById(R.id.statusTextView);
+        saveDataButton = findViewById(R.id.saveDataButton);
+
+        // Initialize save button
+        saveDataButton.setOnClickListener(v -> {
+            if (currentHealthData != null) {
+                saveToDatabase(currentHealthData);
+                Toast.makeText(this, "Data saved successfully", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "No data to save", Toast.LENGTH_SHORT).show();
+            }
+        });
+        ecgButton = findViewById(R.id.ecgButton);
+
+        ecgButton.setOnClickListener(v -> {
+            Intent intent = new Intent(HealthDataActivity.this, ECGMonitoringActivity.class);
+            startActivity(intent);
+        });
+
 
         // Start and bind to BluetoothService
         Intent intent = new Intent(this, BluetoothService.class);
@@ -159,17 +183,14 @@ public class HealthDataActivity extends AppCompatActivity implements BluetoothSe
     @Override
     public void onDataReceived(String data) {
         try {
-            Gson gson = new Gson();
-            HealthData healthData = gson.fromJson(data, HealthData.class);
-
+            currentHealthData = new Gson().fromJson(data, HealthData.class);
             runOnUiThread(() -> {
-                updateUI(healthData);
-                checkThresholds(healthData);
-                saveToDatabase(healthData);
+                updateUI(currentHealthData);
+                checkThresholds(currentHealthData);
+                // Automatic saving removed - now only manual save via button
             });
-
         } catch (JsonSyntaxException e) {
-            runOnUiThread(() -> statusTextView.setText("Error parsing data"));
+            runOnUiThread(() -> statusTextView.setText("Data format error"));
         }
     }
 
@@ -205,4 +226,5 @@ public class HealthDataActivity extends AppCompatActivity implements BluetoothSe
         float temperature;
         float humidity;
     }
+
 }
