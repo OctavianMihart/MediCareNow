@@ -10,6 +10,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@drawable/fa4147a9_6039_4da9_a081_6702763a8c5f"
         android:orientation="vertical"
         android:padding="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -23,45 +24,66 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:text="Status: Not connected"
+            android:text="Status:connected"
             android:textSize="18sp" />
 
         <TextView
             android:id="@+id/pulseTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Pulse: -- bpm"
-            android:textSize="24sp" />
+            android:background="@color/white"
+            android:backgroundTint="#00FFFFFF"
+            android:text="Puls: -- bpm"
+            android:textSize="34sp" />
 
         <TextView
             android:id="@+id/tempTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Temperature: --°C"
-            android:textSize="24sp" />
+            android:background="@color/white"
+            android:backgroundTint="#00FFFFFF"
+            android:text="Temperatură: --°C"
+            android:textSize="34sp" />
 
         <TextView
             android:id="@+id/humidityTextView"
-            android:layout_width="378dp"
-            android:layout_height="48dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Humidity: --%"
-            android:textSize="24sp" />
+            android:background="@color/white"
+            android:backgroundTint="#00FFFFFF"
+            android:text="Umiditate: --%"
+            android:textSize="34sp" />
 
         <Button
             android:id="@+id/ecgButton"
-            android:layout_width="374dp"
+            android:layout_width="match_parent"
             android:layout_height="64dp"
             android:layout_marginTop="16dp"
             android:text="Open ECG Monitor" />
 
+        <Button
+            android:id="@+id/refreshButton"
+            android:layout_width="match_parent"
+            android:text="Reîmprospătează datele"
+            android:layout_height="64dp"
+            android:layout_marginTop="32dp"/>
+
+        <Button
+            android:id="@+id/recommendationsButton"
+            android:layout_width="match_parent"
+            android:text="Vezi recomandări medicale"
+            android:layout_height="64dp"
+            android:layout_marginTop="32dp"
+            android:backgroundTint="#ff6750a4"/>
         <Button
             android:id="@+id/saveDataButton"
             android:layout_width="match_parent"
             android:layout_height="64dp"
             android:layout_marginTop="32dp"
             android:text="Save Data to Firebase" />
+
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
