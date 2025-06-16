@@ -8,18 +8,18 @@ import android.graphics.Path;
 import android.util.AttributeSet;
 import android.view.View;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class ECGView extends View {
+    private static final int MAX_POINTS = 1000;
+    private static final int SAMPLING_RATE_HZ = 200;
+
     private Paint paint;
     private Path path;
-    private List<Float> ecgData;
-    private Random random;
-    private int index = 0;
-    private float lastX = 0;
-    private float lastY = 0;
+    private Queue<Float> ecgData;
+    private int samplesPerBeat = (60 * SAMPLING_RATE_HZ) / 72; // Default 72 BPM
+    private int sampleCount = 0;
 
     public ECGView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -34,25 +34,17 @@ public class ECGView extends View {
         paint.setAntiAlias(true);
 
         path = new Path();
-        ecgData = new ArrayList<>();
-        random = new Random();
+        ecgData = new LinkedList<>();
 
-        // Generate some initial ECG-like data
-        for (int i = 0; i < 1000; i++) {
-            ecgData.add(generateECGPoint(i));
+        // Initialize with flat line
+        for (int i = 0; i < MAX_POINTS; i++) {
+            ecgData.add(0f);
         }
     }
 
-    private float generateECGPoint(int index) {
-        // Simulate ECG waveform
-        if (index % 100 == 0) {
-            return 0.8f; // QRS complex peak
-        } else if (index % 100 == 2) {
-            return -0.2f; // S wave
-        } else if (index % 100 == 50) {
-            return 0.3f; // T wave
-        }
-        return 0.1f * random.nextFloat(); // Baseline with small variations
+    public void setHeartRate(int bpm) {
+        samplesPerBeat = (60 * SAMPLING_RATE_HZ) / bpm;
+        invalidate();
     }
 
     @Override
@@ -63,32 +55,64 @@ public class ECGView extends View {
         float height = getHeight();
         float centerY = height / 2;
         float scale = height * 0.4f;
+        float pixelsPerPoint = width / MAX_POINTS;
 
+        // Generate new ECG point
+        float newPoint = generateECGPoint(sampleCount % samplesPerBeat);
+        sampleCount++;
+
+        // Update data queue
+        ecgData.poll();
+        ecgData.add(newPoint);
+
+        // Draw the path
         path.reset();
-        path.moveTo(0, centerY);
-
-        // Draw the ECG waveform
-        for (int i = 0; i < width; i++) {
-            float x = i;
-            float y = centerY - (ecgData.get((index + i) % ecgData.size()) * scale);
+        int i = 0;
+        for (Float point : ecgData) {
+            float x = i * pixelsPerPoint;
+            float y = centerY - (point * scale);
 
             if (i == 0) {
                 path.moveTo(x, y);
             } else {
                 path.lineTo(x, y);
             }
+            i++;
         }
 
         canvas.drawPath(path, paint);
+        postInvalidateDelayed(1000 / SAMPLING_RATE_HZ);
+    }
 
-        // Update the index for scrolling effect
-        index = (index + 1) % ecgData.size();
+    private float generateECGPoint(int sampleInBeat) {
+        float t = (float)sampleInBeat / samplesPerBeat;
 
-        // Add new data point to simulate real-time updates
-        ecgData.add(generateECGPoint(ecgData.size()));
-        ecgData.remove(0);
+        // ECG waveform components
+        float pWave = 0, qrsComplex = 0, tWave = 0;
 
-        // Redraw every 50ms for animation
-        postInvalidateDelayed(50);
+        // P Wave
+        if (t >= 0.1 && t <= 0.2) {
+            pWave = (float)(0.25 * Math.sin(Math.PI * (t - 0.1) / 0.1));
+        }
+
+        // QRS Complex
+        if (t >= 0.25 && t <= 0.35) {
+            if (t <= 0.27) {
+                qrsComplex = -0.5f * (t - 0.25f)/0.02f;
+            }
+            else if (t <= 0.30) {
+                qrsComplex = 1.0f - 2.5f * (t - 0.27f);
+            }
+            else {
+                qrsComplex = -0.3f + 3.0f * (t - 0.30f)/0.05f;
+            }
+        }
+
+        // T Wave
+        if (t >= 0.4 && t <= 0.6) {
+            tWave = (float)(0.3 * Math.sin(Math.PI * (t - 0.4) / 0.2));
+        }
+
+        return pWave + qrsComplex + tWave + 0.05f * (float)Math.sin(2 * Math.PI * t * 5);
     }
 }

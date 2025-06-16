@@ -1,6 +1,5 @@
 package com.example.medicarenow;
 
-import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
@@ -14,7 +13,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresPermission;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -25,46 +23,39 @@ import com.google.gson.JsonSyntaxException;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
-public class HealthDataActivity extends AppCompatActivity implements BluetoothService.BluetoothDataListener {
+public class HealthDataActivity extends AppCompatActivity
+        implements BluetoothService.BluetoothDataListener {
+
+    private static final String ARDUINO_MAC_ADDRESS = "58:56:00:00:2C:BE"; // Replace with your device's MAC
 
     private TextView pulseTextView, tempTextView, humidityTextView, statusTextView;
+    private Button saveDataButton;
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
-    private Button saveDataButton;
+    private BluetoothService bluetoothService;
+    private boolean isBound = false;
+
+    // Current health data
     private HealthData currentHealthData;
 
-    // Threshold values for alerts
+    // Threshold values
     private static final int MAX_PULSE = 100;
     private static final int MIN_PULSE = 60;
-    private static final float MAX_TEMP = 37.5f; // Celsius
+    private static final float MAX_TEMP = 37.5f;
     private static final float MIN_TEMP = 36.0f;
     private static final float MAX_HUMIDITY = 70.0f;
     private static final float MIN_HUMIDITY = 30.0f;
 
-    // Bluetooth service
-    private BluetoothService bluetoothService;
-    private boolean isBound = false;
-    // ecg
-    private Button ecgButton;
-
-    // Hardcoded Bluetooth device address
-    private static final String ARDUINO_BLUETOOTH_ADDRESS = "00:11:22:33:44:55"; // Replace with your Arduino's address
-
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             BluetoothService.LocalBinder binder = (BluetoothService.LocalBinder) service;
             bluetoothService = binder.getService();
             bluetoothService.setDataListener(HealthDataActivity.this);
             isBound = true;
-
-            // Connect to the hardcoded device
-            connectToArduinoDevice();
+            connectToDevice();
         }
 
         @Override
@@ -96,88 +87,20 @@ public class HealthDataActivity extends AppCompatActivity implements BluetoothSe
                 Toast.makeText(this, "No data to save", Toast.LENGTH_SHORT).show();
             }
         });
-        ecgButton = findViewById(R.id.ecgButton);
 
-        ecgButton.setOnClickListener(v -> {
-            Intent intent = new Intent(HealthDataActivity.this, ECGMonitoringActivity.class);
-            startActivity(intent);
-        });
-
-
-        // Start and bind to BluetoothService
         Intent intent = new Intent(this, BluetoothService.class);
         startService(intent);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    private void connectToArduinoDevice() {
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter == null) {
-            statusTextView.setText("Bluetooth not supported");
-            return;
-        }
-
-        if (!bluetoothAdapter.isEnabled()) {
-            statusTextView.setText("Please enable Bluetooth");
-            return;
-        }
-
-        BluetoothDevice device = bluetoothAdapter.getRemoteDevice(ARDUINO_BLUETOOTH_ADDRESS);
+    private void connectToDevice() {
+        BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(ARDUINO_MAC_ADDRESS);
         if (device != null && bluetoothService != null) {
-            bluetoothService.connectToDevice(device);
+            bluetoothService.connectToDevice(String.valueOf(device));
             statusTextView.setText("Connecting to device...");
         } else {
             statusTextView.setText("Device not found");
         }
-    }
-
-    private void updateUI(HealthData data) {
-        pulseTextView.setText(String.format(Locale.getDefault(), "Pulse: %d bpm", data.pulse));
-        tempTextView.setText(String.format(Locale.getDefault(), "Temperature: %.1f°C", data.temperature));
-        humidityTextView.setText(String.format(Locale.getDefault(), "Humidity: %.1f%%", data.humidity));
-    }
-
-    private void checkThresholds(HealthData data) {
-        StringBuilder alertMessage = new StringBuilder();
-
-        if (data.pulse > MAX_PULSE) {
-            alertMessage.append("High pulse! ");
-        } else if (data.pulse < MIN_PULSE) {
-            alertMessage.append("Low pulse! ");
-        }
-
-        if (data.temperature > MAX_TEMP) {
-            alertMessage.append("High temperature! ");
-        } else if (data.temperature < MIN_TEMP) {
-            alertMessage.append("Low temperature! ");
-        }
-
-        if (data.humidity > MAX_HUMIDITY) {
-            alertMessage.append("High humidity! ");
-        } else if (data.humidity < MIN_HUMIDITY) {
-            alertMessage.append("Low humidity! ");
-        }
-
-        if (alertMessage.length() > 0) {
-            Toast.makeText(this, alertMessage.toString(), Toast.LENGTH_LONG).show();
-            statusTextView.setText("ALERT: " + alertMessage.toString());
-        }
-    }
-
-    private void saveToDatabase(HealthData data) {
-        if (mAuth.getCurrentUser() == null) return;
-
-        String userId = mAuth.getCurrentUser().getUid();
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-
-        Map<String, Object> healthRecord = new HashMap<>();
-        healthRecord.put("pulse", data.pulse);
-        healthRecord.put("temperature", data.temperature);
-        healthRecord.put("humidity", data.humidity);
-        healthRecord.put("timestamp", timestamp);
-
-        mDatabase.child("health_data").child(userId).child(timestamp.replace(" ", "_")).setValue(healthRecord);
     }
 
     @Override
@@ -194,37 +117,76 @@ public class HealthDataActivity extends AppCompatActivity implements BluetoothSe
         }
     }
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    @Override
+    public void onConnectionStatusChanged(boolean isConnected, String message) {
+
+    }
+
     @Override
     public void onConnectionStatusChanged(boolean isConnected) {
         runOnUiThread(() -> {
             if (isConnected) {
-                statusTextView.setText("Connected to Arduino device");
+                statusTextView.setText("Connected to device");
             } else {
-                statusTextView.setText("Disconnected - attempting to reconnect");
-                // Attempt to reconnect
-                if (bluetoothService != null) {
-                    connectToArduinoDevice();
-                }
+                statusTextView.setText("Disconnected");
+                Toast.makeText(this, "Device disconnected", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void updateUI(HealthData data) {
+        pulseTextView.setText(String.format(Locale.getDefault(), "Pulse: %d bpm", data.pulse));
+        tempTextView.setText(String.format(Locale.getDefault(), "Temp: %.1f°C", data.temperature));
+        humidityTextView.setText(String.format(Locale.getDefault(), "Humidity: %.1f%%", data.humidity));
+    }
+
+    private void checkThresholds(HealthData data) {
+        StringBuilder alerts = new StringBuilder();
+
+        if (data.pulse > MAX_PULSE) alerts.append("High pulse! ");
+        else if (data.pulse < MIN_PULSE) alerts.append("Low pulse! ");
+
+        if (data.temperature > MAX_TEMP) alerts.append("High temp! ");
+        else if (data.temperature < MIN_TEMP) alerts.append("Low temp! ");
+
+        if (data.humidity > MAX_HUMIDITY) alerts.append("High humidity! ");
+        else if (data.humidity < MIN_HUMIDITY) alerts.append("Low humidity! ");
+
+        if (alerts.length() > 0) {
+            Toast.makeText(this, alerts.toString(), Toast.LENGTH_LONG).show();
+            statusTextView.setText("ALERT: " + alerts);
+        }
+    }
+
+    private void saveToDatabase(HealthData data) {
+        if (mAuth.getCurrentUser() == null) {
+            Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String userId = mAuth.getCurrentUser().getUid();
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+
+        DatabaseReference newRecordRef = mDatabase.child("health_data").child(userId).push();
+
+        newRecordRef.child("pulse").setValue(data.pulse);
+        newRecordRef.child("temperature").setValue(data.temperature);
+        newRecordRef.child("humidity").setValue(data.humidity);
+        newRecordRef.child("timestamp").setValue(timestamp);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Unbind from the service
         if (isBound) {
             unbindService(serviceConnection);
             isBound = false;
         }
     }
 
-    // Data model class
     private static class HealthData {
         int pulse;
         float temperature;
         float humidity;
     }
-
 }

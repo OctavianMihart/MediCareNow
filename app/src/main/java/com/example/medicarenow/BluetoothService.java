@@ -28,9 +28,13 @@ public class BluetoothService extends Service {
     private ConnectThread connectThread;
     private ConnectedThread connectedThread;
     private Handler handler = new Handler(Looper.getMainLooper());
+    private String deviceAddress;
 
     public interface BluetoothDataListener {
         void onDataReceived(String data);
+        void onConnectionStatusChanged(boolean isConnected, String message);
+
+        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         void onConnectionStatusChanged(boolean isConnected);
     }
 
@@ -57,40 +61,70 @@ public class BluetoothService extends Service {
         this.dataListener = listener;
     }
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    public void connectToDevice(BluetoothDevice device) {
+    public void connectToDevice(String address) {
+        this.deviceAddress = address;
+
         if (connectThread != null) {
             connectThread.cancel();
             connectThread = null;
         }
 
+        BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
         connectThread = new ConnectThread(device);
         connectThread.start();
+
+        handler.post(() -> {
+            if (dataListener != null) {
+                dataListener.onConnectionStatusChanged(false, "Se încearcă conectarea...");
+            }
+        });
+    }
+
+    public void disconnect() {
+        if (connectThread != null) {
+            connectThread.cancel();
+            connectThread = null;
+        }
+
+        if (connectedThread != null) {
+            connectedThread.cancel();
+            connectedThread = null;
+        }
+
+        handler.post(() -> {
+            if (dataListener != null) {
+                dataListener.onConnectionStatusChanged(false, "Deconectat");
+            }
+        });
     }
 
     private class ConnectThread extends Thread {
         private final BluetoothSocket mmSocket;
 
-        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         public ConnectThread(BluetoothDevice device) {
             BluetoothSocket tmp = null;
             try {
                 tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
             } catch (IOException e) {
-                Log.e(TAG, "Socket creation failed", e);
+                Log.e(TAG, "Eroare creare socket", e);
+                handler.post(() -> {
+                    if (dataListener != null) {
+                        dataListener.onConnectionStatusChanged(false, "Eroare creare socket");
+                    }
+                });
             }
             mmSocket = tmp;
         }
 
-        @RequiresPermission(allOf = {Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN})
         public void run() {
             bluetoothAdapter.cancelDiscovery();
 
             try {
                 mmSocket.connect();
+
                 handler.post(() -> {
                     if (dataListener != null) {
-                        dataListener.onConnectionStatusChanged(true);
+                        dataListener.onConnectionStatusChanged(true, "Conectat la " + deviceAddress);
                     }
                 });
 
@@ -98,14 +132,16 @@ public class BluetoothService extends Service {
                 connectedThread.start();
 
             } catch (IOException connectException) {
+                Log.e(TAG, "Eroare conectare", connectException);
                 try {
                     mmSocket.close();
                 } catch (IOException closeException) {
-                    Log.e(TAG, "Could not close the client socket", closeException);
+                    Log.e(TAG, "Eroare închidere socket", closeException);
                 }
+
                 handler.post(() -> {
                     if (dataListener != null) {
-                        dataListener.onConnectionStatusChanged(false);
+                        dataListener.onConnectionStatusChanged(false, "Eroare conectare: " + connectException.getMessage());
                     }
                 });
             }
@@ -113,9 +149,11 @@ public class BluetoothService extends Service {
 
         public void cancel() {
             try {
-                mmSocket.close();
+                if (mmSocket != null) {
+                    mmSocket.close();
+                }
             } catch (IOException e) {
-                Log.e(TAG, "Could not close the client socket", e);
+                Log.e(TAG, "Eroare închidere socket", e);
             }
         }
     }
@@ -134,7 +172,7 @@ public class BluetoothService extends Service {
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
             } catch (IOException e) {
-                Log.e(TAG, "Error getting streams", e);
+                Log.e(TAG, "Eroare obținere stream-uri", e);
             }
 
             mmInStream = tmpIn;
@@ -149,16 +187,18 @@ public class BluetoothService extends Service {
                 try {
                     bytes = mmInStream.read(buffer);
                     String incomingMessage = new String(buffer, 0, bytes);
+
                     handler.post(() -> {
                         if (dataListener != null) {
                             dataListener.onDataReceived(incomingMessage);
                         }
                     });
+
                 } catch (IOException e) {
-                    Log.d(TAG, "Input stream disconnected", e);
+                    Log.d(TAG, "Conexiune pierdută", e);
                     handler.post(() -> {
                         if (dataListener != null) {
-                            dataListener.onConnectionStatusChanged(false);
+                            dataListener.onConnectionStatusChanged(false, "Conexiune pierdută");
                         }
                     });
                     break;
@@ -166,11 +206,19 @@ public class BluetoothService extends Service {
             }
         }
 
+        public void write(byte[] bytes) {
+            try {
+                mmOutStream.write(bytes);
+            } catch (IOException e) {
+                Log.e(TAG, "Eroare trimitere date", e);
+            }
+        }
+
         public void cancel() {
             try {
                 mmSocket.close();
             } catch (IOException e) {
-                Log.e(TAG, "Could not close the connect socket", e);
+                Log.e(TAG, "Eroare închidere socket", e);
             }
         }
     }

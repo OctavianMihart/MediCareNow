@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "214057807788",
-    "project_id": "medicarenow-266b5",
-    "storage_bucket": "medicarenow-266b5.firebasestorage.app"
+    "project_number": "850704351418",
+    "project_id": "medicarenow-1a3da",
+    "storage_bucket": "medicarenow-1a3da.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:214057807788:android:3c786894de45c5e9f7d409",
+        "mobilesdk_app_id": "1:850704351418:android:368bbb6959997374558283",
         "android_client_info": {
           "package_name": "com.example.medicarenow"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyD6NsuqI_9CBsG1x_fPNP_P7X9RY3PLQkE"
+          "current_key": "AIzaSyDQeczyjDck1kWuwizQgRcbKCGDzOhh_ow"
         }
       ],
       "services": {
