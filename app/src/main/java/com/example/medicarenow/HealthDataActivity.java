@@ -79,7 +79,7 @@ public class HealthDataActivity extends AppCompatActivity implements BluetoothSe
         setContentView(R.layout.activity_health_data);
 
         mAuth = FirebaseAuth.getInstance();
-        mDatabase = FirebaseDatabase.getInstance().getReference();
+        mDatabase = FirebaseDatabase.getInstance("https://medicarenow-1a3da-default-rtdb.firebaseio.com").getReference();
 
         pulseTextView = findViewById(R.id.pulseTextView);
         tempTextView = findViewById(R.id.tempTextView);
