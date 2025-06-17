@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "850704351418",
+    "firebase_url": "https://medicarenow-1a3da-default-rtdb.firebaseio.com",
     "project_id": "medicarenow-1a3da",
     "storage_bucket": "medicarenow-1a3da.firebasestorage.app"
   },

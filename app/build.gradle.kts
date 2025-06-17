@@ -45,7 +45,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation(platform("com.google.firebase:firebase-bom:33.11.0"))
+    implementation("com.google.firebase:firebase-bom:33.11.0")
+    implementation (platform("com.google.firebase:firebase-database:20.0.4"))
     // Bluetooth
     implementation  ("androidx.core:core-ktx:1.10.1")
     implementation ("com.google.code.gson:gson:2.9.0")
