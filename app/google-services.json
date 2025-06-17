@@ -8,12 +8,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:850704351418:android:368bbb6959997374558283",
+        "mobilesdk_app_id": "1:850704351418:android:f7432961b8174eaa558283",
         "android_client_info": {
           "package_name": "com.example.medicarenow"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "850704351418-web.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCCobgyzb3s4x7VTVI-Qt3yi4HGECbrDnU"
@@ -21,7 +26,17 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "850704351418-web.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "analytics_service": {
+          "analytics_property": {
+            "tracking_id": "G-HZJ9K8Q0X2"
+          }
         }
       }
     }
